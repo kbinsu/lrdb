@@ -107,9 +107,15 @@ def build_ai_df(filtered_df):
 # ==================================================
 
 @pn.depends(mode_radio, n_months_slider, start_select, end_select)
-def ai_result():
+def ai_result(mode, n_months, start, end):
 
-    temp = get_filtered_df()
+    if mode == "최근 N개월":
+        temp = df.sort_values("마감년월").tail(n_months)
+    else:
+        temp = df[
+            (df["마감년월"] >= start)
+            & (df["마감년월"] <= end)
+    ]
 
     ai_df = build_ai_df(temp)
 
