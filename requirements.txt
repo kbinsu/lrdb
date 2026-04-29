@@ -5,3 +5,4 @@ numpy
 openpyxl
 bokeh
 holoviews
+scikit-learn
