@@ -46,6 +46,54 @@ coverages = [
 ]
 
 # ==================================================
+# AI: 담보별 이상탐지 (최근기간 기준)
+# ==================================================
+
+import numpy as np
+from sklearn.ensemble import IsolationForest
+
+def build_ai_df(filtered_df):
+
+    df_ai = filtered_df.copy()
+
+    # 변화율 & 편차 추가
+    df_ai = df_ai.sort_values(["담보분류", "마감년월"])
+
+    df_ai["변화율"] = df_ai.groupby("담보분류")["당월손해율(%)"].pct_change()
+    df_ai["편차"] = df_ai["당월손해율(%)"] - df_ai["누계손해율(%)"]
+
+    features = ["당월손해율(%)", "변화율", "편차"]
+
+    df_ai["AI위험점수"] = 0
+    df_ai["AI판정"] = "정상"
+
+    for cov in df_ai["담보분류"].unique():
+
+        temp = df_ai[df_ai["담보분류"] == cov]
+
+        if len(temp) < 20:
+            continue
+
+        X = temp[features].fillna(0)
+
+        model = IsolationForest(
+            n_estimators=100,
+            contamination=0.1,
+            random_state=42
+        )
+
+        model.fit(X)
+
+        df_ai.loc[temp.index, "AI위험점수"] = -model.decision_function(X)
+        df_ai.loc[temp.index, "AI판정"] = np.where(
+            model.predict(X) == -1,
+            "이상징후",
+            "정상"
+        )
+
+    return df_ai
+
+# ==================================================
 # 2) 위젯
 # ==================================================
 
@@ -283,6 +331,34 @@ def bar_plot(mode, n_months, start_month, end_month, selected_y):
         title=f"[ C 당월 위험보험료/손해액 비교 : 주요담보 ] {end_month}",
     )
 
+@pn.depends(mode_radio, n_months_slider, start_select, end_select)
+def ai_risk_table(mode, n_months, start_month, end_month):
+
+    temp, _, end_month = get_filtered_df(
+        mode, n_months, start_month, end_month
+    )
+
+    ai_df = build_ai_df(temp)
+
+    result = ai_df[ai_df["마감년월"] == end_month].copy()
+
+    result = result.sort_values("AI위험점수", ascending=False)
+
+    return pn.widgets.Tabulator(
+        result[
+            [
+                "담보분류",
+                "당월손해율(%)",
+                "누계손해율(%)",
+                "변화율",
+                "편차",
+                "AI판정",
+                "AI위험점수"
+            ]
+        ],
+        page_size=10
+    )
+
 # ==================================================
 # 5) 레이아웃
 # ==================================================
@@ -318,6 +394,10 @@ template = pn.template.FastListTemplate(
             pn.Column(scatter_plot, margin=(0, 25)),
             pn.Column(yaxis_risk_premium_losses, bar_plot),
         ),
+        pn.Row(
+            pn.pane.Markdown("## AI 이상탐지 결과"),
+            ai_risk_table,
+),
     ],
     accent_base_color="#88d8b0",
     header_background="#88d8b0",
