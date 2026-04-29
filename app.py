@@ -7,6 +7,7 @@
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 import panel as pn
 import hvplot.pandas
 from sklearn.ensemble import IsolationForest
