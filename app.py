@@ -9,6 +9,7 @@ from pathlib import Path
 import pandas as pd
 import panel as pn
 import hvplot.pandas
+from sklearn.ensemble import IsolationForest
 
 # ==================================================
 # 1) 기본 설정
@@ -42,6 +43,36 @@ coverages = [
     "질병생존_일당",
     "질병생존_3대진단",
 ]
+
+# ==================================================
+# AI 기능: 손해율 이상탐지 모델
+# ==================================================
+
+ai_features = [
+    "당월손해율(%)",
+    "누계손해율(%)",
+    "위험P(억원)",
+    "손해액(억원)",
+]
+
+ai_df = df.copy()
+
+for col in ai_features:
+    ai_df[col] = pd.to_numeric(ai_df[col], errors="coerce")
+
+ai_train = ai_df[ai_features].fillna(ai_df[ai_features].median())
+
+ai_model = IsolationForest(
+    n_estimators=200,
+    contamination=0.05,
+    random_state=42
+)
+
+ai_model.fit(ai_train)
+
+ai_df["AI이상여부"] = ai_model.predict(ai_train)
+ai_df["AI위험점수"] = -ai_model.decision_function(ai_train)
+ai_df["AI판정"] = np.where(ai_df["AI이상여부"] == -1, "이상징후", "정상")
 
 # ==================================================
 # 3) 위젯
@@ -174,6 +205,88 @@ def bar_plot(selected_month, selected_y):
     )
 
 # ==================================================
+# AI 분석 결과
+# ==================================================
+
+@pn.depends(discrete_slider)
+def ai_risk_table(selected_month):
+    temp = ai_df[ai_df["마감년월"] == selected_month].copy()
+
+    temp = temp.sort_values(
+        ["AI위험점수", "당월손해율(%)"],
+        ascending=False
+    )
+
+    result = temp[
+        [
+            "마감년월",
+            "담보분류",
+            "당월손해율(%)",
+            "누계손해율(%)",
+            "위험P(억원)",
+            "손해액(억원)",
+            "AI판정",
+            "AI위험점수",
+        ]
+    ].head(10)
+
+    return pn.widgets.Tabulator(
+        result,
+        pagination="remote",
+        page_size=10,
+        sizing_mode="stretch_width",
+    )
+
+
+@pn.depends(discrete_slider)
+def ai_explain_text(selected_month):
+    temp = ai_df[ai_df["마감년월"] == selected_month].copy()
+
+    temp = temp.sort_values(
+        ["AI위험점수", "당월손해율(%)"],
+        ascending=False
+    )
+
+    top = temp.iloc[0]
+
+    coverage = top["담보분류"]
+    monthly_lr = round(top["당월손해율(%)"], 1)
+    cum_lr = round(top["누계손해율(%)"], 1)
+    risk_score = round(top["AI위험점수"], 4)
+    ai_judge = top["AI판정"]
+
+    if ai_judge == "이상징후":
+        action = "해당 담보의 손해율 급등 원인을 점검하고, 신계약 인수 기준 또는 보장 조건 재검토가 필요합니다."
+    else:
+        action = "현재는 뚜렷한 이상징후가 낮으나, 위험점수 상위 담보는 지속 모니터링이 필요합니다."
+
+    text = f"""
+## AI 이상탐지 요약
+
+**선택 월:** {selected_month}
+
+**AI가 가장 위험하게 본 담보:** {coverage}
+
+**AI 판정:** {ai_judge}
+
+**당월손해율:** {monthly_lr}%
+
+**누계손해율:** {cum_lr}%
+
+**AI 위험점수:** {risk_score}
+
+### AI 해석
+
+해당 담보는 선택 월 기준으로 손해율, 위험보험료, 손해액 패턴을 종합했을 때 상대적으로 위험도가 높게 탐지되었습니다.
+
+### 추천 액션
+
+{action}
+"""
+    return pn.pane.Markdown(text)
+
+
+# ==================================================
 # 5) 레이아웃
 # ==================================================
 
@@ -206,6 +319,10 @@ template = pn.template.FastListTemplate(
         pn.Row(
             pn.Column(scatter_plot, margin=(0, 25)),
             pn.Column(yaxis_risk_premium_losses, bar_plot),
+        ),
+        pn.Row(
+            pn.Column(ai_explain_text, margin=(0, 25)),
+            ai_risk_table,
         ),
     ],
     accent_base_color="#88d8b0",
