@@ -1,31 +1,21 @@
-# ==================================================
-# Panel Dashboard App
-# Render Start Command:
-# panel serve app.py --address 0.0.0.0 --port $PORT --allow-websocket-origin="*"
-# ==================================================
-
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import panel as pn
 import hvplot.pandas
+
+from sklearn.ensemble import IsolationForest
 
 pn.extension("tabulator", sizing_mode="stretch_width")
 
 BASE_DIR = Path(__file__).resolve().parent
 LOSS_RATIO_FILE = BASE_DIR / "loss_ratio.xlsx"
-YEAR_FILE = BASE_DIR / "year2.xlsx"
 IMAGE_FILE = BASE_DIR / "health.png"
 
-# ==================================================
-# 1) 데이터 로드
-# ==================================================
-
 df = pd.read_excel(LOSS_RATIO_FILE)
-df2 = pd.read_excel(YEAR_FILE)
 
 df["마감년월"] = pd.to_datetime(df["마감년월"]).dt.strftime("%Y-%m")
-df2["year5"] = pd.to_datetime(df2["year5"]).dt.strftime("%Y-%m")
 
 month_options = sorted(df["마감년월"].dropna().unique().tolist())
 
@@ -35,28 +25,46 @@ start_idx = max(0, end_idx - 59)
 default_start = month_options[start_idx]
 default_end = month_options[end_idx]
 
-coverages = [
-    "장기보험 계",
-    "사망 계",
-    "생존 계",
-    "의료비_상해",
-    "의료비_질병",
-    "질병생존_일당",
-    "질병생존_3대진단",
-]
-
 # ==================================================
-# AI: 담보별 이상탐지 (최근기간 기준)
+# 조회 위젯
 # ==================================================
 
-import numpy as np
-from sklearn.ensemble import IsolationForest
+mode_radio = pn.widgets.RadioButtonGroup(
+    name="조회 방식",
+    options=["최근 N개월", "기간 지정"],
+    value="기간 지정"
+)
+
+n_months_slider = pn.widgets.IntSlider(name="최근 개월 수", start=6, end=120, value=60)
+
+start_select = pn.widgets.Select(name="시작월", options=month_options, value=default_start)
+end_select = pn.widgets.Select(name="종료월", options=month_options, value=default_end)
+
+# ==================================================
+# 데이터 필터
+# ==================================================
+
+def get_filtered_df():
+    if mode_radio.value == "최근 N개월":
+        n = n_months_slider.value
+        return df.sort_values("마감년월").tail(n)
+
+    return df[
+        (df["마감년월"] >= start_select.value)
+        & (df["마감년월"] <= end_select.value)
+    ]
+
+# ==================================================
+# AI (에러 해결 버전)
+# ==================================================
 
 def build_ai_df(filtered_df):
 
     df_ai = filtered_df.copy()
 
-    # 변화율 & 편차 추가
+    df_ai["당월손해율(%)"] = pd.to_numeric(df_ai["당월손해율(%)"], errors="coerce")
+    df_ai["누계손해율(%)"] = pd.to_numeric(df_ai["누계손해율(%)"], errors="coerce")
+
     df_ai = df_ai.sort_values(["담보분류", "마감년월"])
 
     df_ai["변화율"] = df_ai.groupby("담보분류")["당월손해율(%)"].pct_change()
@@ -64,10 +72,11 @@ def build_ai_df(filtered_df):
 
     features = ["당월손해율(%)", "변화율", "편차"]
 
-    df_ai["AI위험점수"] = 0
+    # ⭐ 핵심: float로 초기화
+    df_ai["AI위험점수"] = 0.0
     df_ai["AI판정"] = "정상"
 
-    for cov in df_ai["담보분류"].unique():
+    for cov in df_ai["담보분류"].dropna().unique():
 
         temp = df_ai[df_ai["담보분류"] == cov]
 
@@ -76,15 +85,15 @@ def build_ai_df(filtered_df):
 
         X = temp[features].fillna(0)
 
-        model = IsolationForest(
-            n_estimators=100,
-            contamination=0.1,
-            random_state=42
-        )
+        model = IsolationForest(contamination=0.1, random_state=42)
 
         model.fit(X)
 
-        df_ai.loc[temp.index, "AI위험점수"] = -model.decision_function(X)
+        # ⭐ 핵심 수정 부분
+        score = -model.decision_function(X)
+
+        df_ai.loc[temp.index, "AI위험점수"] = pd.Series(score, index=temp.index)
+
         df_ai.loc[temp.index, "AI판정"] = np.where(
             model.predict(X) == -1,
             "이상징후",
@@ -94,258 +103,22 @@ def build_ai_df(filtered_df):
     return df_ai
 
 # ==================================================
-# 2) 위젯
+# AI 결과
 # ==================================================
-
-mode_radio = pn.widgets.RadioButtonGroup(
-    name="조회 방식",
-    options=["최근 N개월", "기간 지정"],
-    value="기간 지정",
-    button_type="success",
-)
-
-n_months_slider = pn.widgets.IntSlider(
-    name="최근 개월 수",
-    start=6,
-    end=120,
-    step=6,
-    value=60,
-)
-
-start_select = pn.widgets.Select(
-    name="시작월",
-    options=month_options,
-    value=default_start,
-)
-
-end_select = pn.widgets.Select(
-    name="종료월",
-    options=month_options,
-    value=default_end,
-)
-
-yaxis_loss_ratio = pn.widgets.RadioButtonGroup(
-    name="손해율 기준",
-    options=["당월손해율(%)", "누계손해율(%)"],
-    value="당월손해율(%)",
-    button_type="success",
-)
-
-yaxis_risk_premium_losses = pn.widgets.RadioButtonGroup(
-    name="위험보험료/손해액 기준",
-    options=["위험P(억원)", "손해액(억원)"],
-    value="위험P(억원)",
-    button_type="success",
-)
-
-# ==================================================
-# 3) 조회조건 함수
-# ==================================================
-
-def get_period(mode, n_months, start_month, end_month):
-    if mode == "최근 N개월":
-        end_idx = month_options.index(end_month)
-        start_idx = max(0, end_idx - n_months + 1)
-        start_month = month_options[start_idx]
-
-    if start_month > end_month:
-        start_month, end_month = end_month, start_month
-
-    return start_month, end_month
-
-
-def get_filtered_df(mode, n_months, start_month, end_month):
-    start_month, end_month = get_period(
-        mode,
-        n_months,
-        start_month,
-        end_month,
-    )
-
-    temp = df[
-        (df["마감년월"] >= start_month)
-        & (df["마감년월"] <= end_month)
-    ].copy()
-
-    return temp, start_month, end_month
-
 
 @pn.depends(mode_radio, n_months_slider, start_select, end_select)
-def period_summary(mode, n_months, start_month, end_month):
-    start_month, end_month = get_period(
-        mode,
-        n_months,
-        start_month,
-        end_month,
-    )
+def ai_result():
 
-    return pn.pane.Markdown(
-        f"""
-### 현재 조회조건
-
-**조회방식:** {mode}
-
-**조회기간:** {start_month} ~ {end_month}
-"""
-    )
-
-
-@pn.depends(mode_radio)
-def period_controls(mode):
-    if mode == "최근 N개월":
-        return pn.Column(
-            n_months_slider,
-            end_select,
-        )
-
-    return pn.Column(
-        start_select,
-        end_select,
-    )
-
-# ==================================================
-# 4) 반응형 그래프 / 표
-# ==================================================
-
-@pn.depends(mode_radio, n_months_slider, start_select, end_select, yaxis_loss_ratio)
-def loss_ratio_plot(mode, n_months, start_month, end_month, selected_y):
-    temp, start_month, end_month = get_filtered_df(
-        mode,
-        n_months,
-        start_month,
-        end_month,
-    )
-
-    temp = temp[temp["담보분류"].isin(coverages)]
-
-    temp = (
-        temp.groupby(["담보분류", "마감년월"])[selected_y]
-        .mean()
-        .reset_index()
-        .sort_values("마감년월")
-        .reset_index(drop=True)
-    )
-
-    return temp.hvplot(
-        x="마감년월",
-        y=selected_y,
-        by="담보분류",
-        line_width=2,
-        height=420,
-        responsive=True,
-        title=f"[ A 원수 손해율 추이 : 주요담보 ] {start_month} ~ {end_month}",
-    )
-
-
-@pn.depends(mode_radio, n_months_slider, start_select, end_select, yaxis_loss_ratio)
-def loss_ratio_table(mode, n_months, start_month, end_month, selected_y):
-    temp, start_month, end_month = get_filtered_df(
-        mode,
-        n_months,
-        start_month,
-        end_month,
-    )
-
-    temp = temp[temp["담보분류"].isin(coverages)]
-
-    temp = (
-        temp.groupby(["담보분류", "마감년월"])[selected_y]
-        .mean()
-        .reset_index()
-        .sort_values(["담보분류", "마감년월"])
-        .reset_index(drop=True)
-    )
-
-    return pn.widgets.Tabulator(
-        temp,
-        pagination="remote",
-        page_size=10,
-        sizing_mode="stretch_width",
-    )
-
-
-@pn.depends(mode_radio, n_months_slider, start_select, end_select)
-def scatter_plot(mode, n_months, start_month, end_month):
-    temp, start_month, end_month = get_filtered_df(
-        mode,
-        n_months,
-        start_month,
-        end_month,
-    )
-
-    temp = temp[
-        (temp["마감년월"] == end_month)
-        & (~temp["담보분류"].isin(coverages))
-    ]
-
-    temp = (
-        temp.groupby(["담보분류", "마감년월", "위험P(억원)"])["당월손해율(%)"]
-        .mean()
-        .reset_index()
-        .sort_values("마감년월")
-        .reset_index(drop=True)
-    )
-
-    return temp.hvplot(
-        x="위험P(억원)",
-        y="당월손해율(%)",
-        by="담보분류",
-        size=80,
-        kind="scatter",
-        alpha=0.7,
-        legend=True,
-        height=500,
-        responsive=True,
-        title=f"[ B 당월 위험보험료 VS 손해율 : 그 외 담보 ] {end_month}",
-    )
-
-
-@pn.depends(mode_radio, n_months_slider, start_select, end_select, yaxis_risk_premium_losses)
-def bar_plot(mode, n_months, start_month, end_month, selected_y):
-    temp, start_month, end_month = get_filtered_df(
-        mode,
-        n_months,
-        start_month,
-        end_month,
-    )
-
-    temp = temp[
-        (temp["마감년월"] == end_month)
-        & (temp["담보분류"].isin(coverages))
-    ]
-
-    temp = (
-        temp.groupby(["마감년월", "담보분류"])[selected_y]
-        .sum()
-        .reset_index()
-        .sort_values("담보분류")
-        .reset_index(drop=True)
-    )
-
-    return temp.hvplot(
-        kind="bar",
-        x="담보분류",
-        y=selected_y,
-        height=500,
-        responsive=True,
-        title=f"[ C 당월 위험보험료/손해액 비교 : 주요담보 ] {end_month}",
-    )
-
-@pn.depends(mode_radio, n_months_slider, start_select, end_select)
-def ai_risk_table(mode, n_months, start_month, end_month):
-
-    temp, _, end_month = get_filtered_df(
-        mode, n_months, start_month, end_month
-    )
+    temp = get_filtered_df()
 
     ai_df = build_ai_df(temp)
 
-    result = ai_df[ai_df["마감년월"] == end_month].copy()
+    latest = ai_df[ai_df["마감년월"] == ai_df["마감년월"].max()]
 
-    result = result.sort_values("AI위험점수", ascending=False)
+    latest = latest.sort_values("AI위험점수", ascending=False)
 
     return pn.widgets.Tabulator(
-        result[
+        latest[
             [
                 "담보분류",
                 "당월손해율(%)",
@@ -353,54 +126,31 @@ def ai_risk_table(mode, n_months, start_month, end_month):
                 "변화율",
                 "편차",
                 "AI판정",
-                "AI위험점수"
+                "AI위험점수",
             ]
         ],
         page_size=10
     )
 
 # ==================================================
-# 5) 레이아웃
+# Layout
 # ==================================================
 
-image_pane = pn.pane.PNG(
-    str(IMAGE_FILE),
-    sizing_mode="scale_width",
-)
-
 template = pn.template.FastListTemplate(
-    title="담보분류별 원수손해율 Dashboard",
+    title="AI 손해율 이상탐지 Dashboard",
+
     sidebar=[
-        pn.pane.Markdown("# 담보별 당월 및 누계 손해율 변화"),
-        pn.pane.Markdown(
-            "#### 2006.1월에서 2022.3월까지 주요 담보별 당월 및 누계 원수손해율 변화를 조회합니다."
-        ),
-        pn.pane.Markdown("#### 1. A 원수 손해율 추이 : 7개 담보군"),
-        pn.pane.Markdown("#### 2. 원수 손해율 리스트 : 7개 담보군"),
-        pn.pane.Markdown("#### 3. B 당월 위험보험료 VS 손해율 : 그 외 담보"),
-        pn.pane.Markdown("#### 4. C 당월 위험보험료/손해액 비교 : 주요담보"),
-        image_pane,
-        pn.pane.Markdown("## 조회 조건"),
+        "## 조회조건",
         mode_radio,
-        period_controls,
-        period_summary,
+        n_months_slider,
+        start_select,
+        end_select,
     ],
+
     main=[
-        pn.Row(
-            pn.Column(yaxis_loss_ratio, loss_ratio_plot, margin=(0, 25)),
-            loss_ratio_table,
-        ),
-        pn.Row(
-            pn.Column(scatter_plot, margin=(0, 25)),
-            pn.Column(yaxis_risk_premium_losses, bar_plot),
-        ),
-        pn.Row(
-            pn.pane.Markdown("## AI 이상탐지 결과"),
-            ai_risk_table,
-),
+        pn.pane.Markdown("## AI 이상탐지 결과"),
+        ai_result,
     ],
-    accent_base_color="#88d8b0",
-    header_background="#88d8b0",
 )
 
 template.servable()
