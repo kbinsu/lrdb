@@ -13,33 +13,30 @@ import hvplot.pandas
 
 from sklearn.ensemble import IsolationForest
 
-pn.extension("tabulator", sizing_mode="stretch_width")
-
-pn.extension(raw_css=[
+pn.extension(
+    "tabulator",
+    sizing_mode="stretch_width",
+    raw_css=[
 """
-/* 전체 탭 */
 .bk-tabs-header .bk-tab {
     background-color: #e0e0e0;
     color: #666;
-    font-weight: normal;
-    border-radius: 6px 6px 0 0;
-    margin-right: 4px;
 }
 
-/* 활성 탭 (핵심) */
 .bk-tabs-header .bk-tab.bk-active {
     background-color: #88d8b0 !important;
-    color: #000 !important;
+    color: black !important;
     font-weight: bold;
     border-bottom: 3px solid #2e7d32;
 }
 
-/* hover */
 .bk-tabs-header .bk-tab:hover {
     background-color: #c8f0dc;
 }
 """
-])
+    ]
+)
+
 BASE_DIR = Path(__file__).resolve().parent
 LOSS_RATIO_FILE = BASE_DIR / "loss_ratio.xlsx"
 YEAR_FILE = BASE_DIR / "year2.xlsx"
