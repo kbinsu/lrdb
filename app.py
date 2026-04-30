@@ -15,6 +15,24 @@ from sklearn.ensemble import IsolationForest
 
 pn.extension("tabulator", sizing_mode="stretch_width")
 
+pn.extension(raw_css=[
+"""
+.bk-tabs-header .bk-tab.bk-active {
+    background-color: #88d8b0 !important;
+    color: black !important;
+    font-weight: bold;
+}
+
+.bk-tabs-header .bk-tab {
+    background-color: #f0f0f0;
+}
+
+.bk-tabs-header .bk-tab:hover {
+    background-color: #c8f0dc;
+}
+"""
+])
+
 BASE_DIR = Path(__file__).resolve().parent
 LOSS_RATIO_FILE = BASE_DIR / "loss_ratio.xlsx"
 YEAR_FILE = BASE_DIR / "year2.xlsx"
