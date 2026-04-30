@@ -128,7 +128,7 @@ risk_threshold = pn.widgets.FloatSlider(
     name="AI 위험 임계값",
     start=-0.05,
     end=0.1,
-    step=0.001,
+    step=0.0001,
     value=-0.005
 )
 
