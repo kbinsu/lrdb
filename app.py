@@ -124,6 +124,14 @@ yaxis_risk_premium_losses = pn.widgets.RadioButtonGroup(
     button_type="success",
 )
 
+risk_threshold = pn.widgets.FloatSlider(
+    name="AI 위험 임계값",
+    start=-0.05,
+    end=0.1,
+    step=0.001,
+    value=-0.005
+)
+
 def get_period(mode, n_months, start_month, end_month):
     if mode == "최근 N개월":
         end_idx = month_options.index(end_month)
@@ -486,13 +494,7 @@ image_pane = pn.pane.PNG(
     sizing_mode="scale_width",
 )
 
-risk_threshold = pn.widgets.FloatSlider(
-    name="AI 위험 임계값",
-    start=-0.05,
-    end=0.1,
-    step=0.001,
-    value=-0.005
-)
+
 
 template = pn.template.FastListTemplate(
     title="담보분류별 원수손해율 Dashboard",
