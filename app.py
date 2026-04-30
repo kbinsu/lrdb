@@ -455,7 +455,7 @@ def ai_risk_table(mode, n_months, start_month, end_month):
             "누계손해율(%)",
             "변화율",
             "편차",
-            "AI판정표",
+            "AI판정표시",
             "AI위험점수",
             "AI설명",
         ]
