@@ -579,10 +579,12 @@ def drilldown_analysis(cov, mode, n_months, start_month, end_month):
 
     row = target.iloc[0]
 
+    row = target.iloc[0]
+
     if row["AI위험점수"] >= risk_threshold.value:
-        explain = "최근 패턴 대비 이상징후 (threshold 기준 탐지)"
+        explain = "최근 패턴 대비 이상징후로 분류되었습니다. 임계값 기준으로 우선 점검 대상입니다."
     else:
-        explain = "정상 범위"
+        explain = "현재 임계값 기준으로 정상 범위입니다."
 
     return pn.pane.Markdown(
         f"""
