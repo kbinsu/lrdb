@@ -528,6 +528,73 @@ def ai_risk_table(mode, n_months, start_month, end_month, threshold):
     
     return table
 
+@pn.depends(selected_cov, mode_radio, n_months_slider, start_select, end_select)
+def drilldown_plot(cov, mode, n_months, start_month, end_month):
+    if cov is None or cov == "":
+        return pn.pane.Markdown("### 담보를 선택하세요")
+
+    temp, start_month, end_month = get_filtered_df(
+        mode,
+        n_months,
+        start_month,
+        end_month,
+    )
+
+    temp = temp[temp["담보분류"] == cov].sort_values("마감년월")
+
+    return temp.hvplot(
+        x="마감년월",
+        y=["당월손해율(%)", "누계손해율(%)"],
+        line_width=3,
+        height=400,
+        responsive=True,
+        title=f"[Drill-down] {cov} 손해율 추이",
+    )
+
+
+@pn.depends(selected_cov, mode_radio, n_months_slider, start_select, end_select)
+def drilldown_analysis(cov, mode, n_months, start_month, end_month):
+    if cov is None or cov == "":
+        return pn.pane.Markdown("")
+
+    temp, start_month, end_month = get_filtered_df(
+        mode,
+        n_months,
+        start_month,
+        end_month,
+    )
+
+    ai_df = build_ai_df(temp)
+    target = ai_df[
+        (ai_df["담보분류"] == cov)
+        & (ai_df["마감년월"] == end_month)
+    ]
+
+    if len(target) == 0:
+        return pn.pane.Markdown("### 선택 담보 데이터가 없습니다.")
+
+    row = target.iloc[0]
+
+    return pn.pane.Markdown(
+        f"""
+### 🔍 Drill-down 자동 분석
+
+**선택 담보:** {cov}
+
+**당월손해율:** {round(row["당월손해율(%)"], 2)}%
+
+**누계손해율:** {round(row["누계손해율(%)"], 2)}%
+
+**전월 대비 변화율:** {round(row["변화율"], 4) if pd.notna(row["변화율"]) else "계산불가"}
+
+**당월-누계 편차:** {round(row["편차"], 2) if pd.notna(row["편차"]) else "계산불가"}
+
+**AI 위험점수:** {round(row["AI위험점수"], 4)}
+
+**AI 설명:** {row["AI설명"]}
+"""
+    )
+
 image_pane = pn.pane.PNG(
     str(IMAGE_FILE),
     sizing_mode="scale_width",
@@ -573,6 +640,10 @@ template = pn.template.FastListTemplate(
                     pn.Column(ai_summary, margin=(0, 25)),
                     ai_risk_table,
                 ),
+                pn.pane.Markdown("## 📊 Drill-down 분석"),
+                selected_cov,
+                drilldown_plot,
+                drilldown_analysis,
             )),
         )
     ],
