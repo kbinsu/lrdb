@@ -225,8 +225,8 @@ def build_ai_df(filtered_df):
     return df_ai
 
 
-@pn.depends(mode_radio, n_months_slider, start_select, end_select, risk_threshold)
-def ai_risk_table(mode, n_months, start_month, end_month, threshold):
+@pn.depends(mode_radio, n_months_slider, start_select, end_select)
+def period_summary(mode, n_months, start_month, end_month):
     start_month, end_month = get_period(
         mode,
         n_months,
@@ -384,8 +384,8 @@ def bar_plot(mode, n_months, start_month, end_month, selected_y):
     )
 
 
-@pn.depends(mode_radio, n_months_slider, start_select, end_select)
-def ai_summary(mode, n_months, start_month, end_month):
+@pn.depends(mode_radio, n_months_slider, start_select, end_select, risk_threshold)
+def ai_summary(mode, n_months, start_month, end_month, threshold):
     temp, start_month, end_month = get_filtered_df(
         mode,
         n_months,
@@ -456,10 +456,6 @@ def ai_risk_table(mode, n_months, start_month, end_month, threshold):
 
     result["AI판정표시"] = result["AI위험점수"].map(
         lambda x: "🔴 이상징후" if x >= threshold else "⚪ 정상"
-    )
-
-    result["AI판정표시"] = result["AI판정"].map(
-        lambda x: "🔴 이상징후" if x == "이상징후" else "⚪ 정상"
     )
 
     result = result[
