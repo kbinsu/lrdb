@@ -404,7 +404,7 @@ def ai_summary(mode, n_months, start_month, end_month):
 
 **평가월:** {end_month}
 
-**AI 최상위 위험 담보:** {top["담보분류"]}
+**AI 모니터링 우선 담보:** {top["담보분류"]}
 
 **AI 판정:** {top["AI판정"]}
 
@@ -482,6 +482,14 @@ image_pane = pn.pane.PNG(
     sizing_mode="scale_width",
 )
 
+risk_threshold = pn.widgets.FloatSlider(
+    name="AI 위험 임계값",
+    start=-0.05,
+    end=0.1,
+    step=0.001,
+    value=-0.005
+)
+
 template = pn.template.FastListTemplate(
     title="담보분류별 원수손해율 Dashboard",
     sidebar=[
@@ -499,6 +507,7 @@ template = pn.template.FastListTemplate(
         mode_radio,
         period_controls,
         period_summary,
+        risk_threshold,   
     ],
     main=[
         pn.Tabs(
