@@ -490,8 +490,8 @@ template = pn.template.FastListTemplate(
     ],
     main=[
         pn.Tabs(
-            ("✅ 대시보드", pn.Column(
-                pn.pane.Markdown("## 📊 현재 화면: 대시보드"),
+            ("📊 대시보드", pn.Column(
+                pn.pane.Markdown("## 📊 대시보드"),
                 pn.Row(
                     pn.Column(yaxis_loss_ratio, loss_ratio_plot, margin=(0, 25)),
                     loss_ratio_table,
@@ -502,7 +502,7 @@ template = pn.template.FastListTemplate(
                 ),
             )),
             ("🤖 AI 이상탐지", pn.Column(
-                pn.pane.Markdown("## 🤖 현재 화면: AI 이상탐지"),
+                pn.pane.Markdown("## 🤖 AI 이상탐지"),
                 pn.Row(
                     pn.Column(ai_summary, margin=(0, 25)),
                     ai_risk_table,
