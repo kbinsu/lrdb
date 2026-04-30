@@ -415,9 +415,9 @@ def ai_summary(mode, n_months, start_month, end_month, threshold):
 
 **평가월:** {end_month}
 
-**AI 모니터링 우선 담보:** {top["담보분류"]}
+**AI 이상징후 담보(threshold 기준):** {cov_text}
 
-**AI 판정:** {top["AI판정"]}
+**AI 판정:** {judge_text}
 
 **당월손해율:** {round(top["당월손해율(%)"], 2)}%
 
@@ -457,6 +457,17 @@ def ai_risk_table(mode, n_months, start_month, end_month, threshold):
     result["AI판정표시"] = result["AI위험점수"].map(
         lambda x: "🔴 이상징후" if x >= threshold else "⚪ 정상"
     )
+
+    alert = result[result["AI위험점수"] >= threshold]
+
+    if len(alert) > 0:
+        cov_text = ", ".join(alert["담보분류"].tolist())
+        judge_text = "이상징후"
+        top = alert.iloc[0]
+    else:
+        cov_text = "없음"
+        judge_text = "정상"
+        top = result.iloc[0]
 
     result = result[
         [
