@@ -242,6 +242,11 @@ def period_summary(mode, n_months, start_month, end_month):
         end_month,
     )
 
+    if top["AI위험점수"] >= threshold:
+        summary_explain = "최근 패턴 대비 이상징후로 분류되었습니다. 임계값 기준으로 우선 점검 대상입니다."
+    else:
+        summary_explain = "현재 임계값 기준으로 정상 범위입니다."
+
     return pn.pane.Markdown(
         f"""
 ### 현재 조회조건
@@ -449,7 +454,7 @@ def ai_summary(mode, n_months, start_month, end_month, threshold):
 
 ### AI 설명
 
-{top["AI설명"]}
+{summary_explain}
 
 ### 추천 액션
 
