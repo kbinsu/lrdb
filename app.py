@@ -522,13 +522,17 @@ def ai_risk_table(mode, n_months, start_month, end_month, threshold):
         if row is not None:
             selected_cov.value = result.iloc[row]["담보분류"]
 
-    selected_cov.options = result["담보분류"].unique().tolist()
+    new_options = result["담보분류"].unique().tolist()
+    selected_cov.options = new_options
+    
+    if selected_cov.value not in new_options:
+        selected_cov.value = new_options[0] if len(new_options) > 0 else None
             
     table.on_click(on_click)
     
     return table
 
-@pn.depends(selected_cov, mode_radio, n_months_slider, start_select, end_select)
+@pn.depends(selected_cov.param.value, mode_radio, n_months_slider, start_select, end_select)
 def drilldown_plot(cov, mode, n_months, start_month, end_month):
     if cov is None or cov == "":
         return pn.pane.Markdown("### 담보를 선택하세요")
@@ -552,7 +556,7 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
     )
 
 
-@pn.depends(selected_cov, mode_radio, n_months_slider, start_select, end_select)
+@pn.depends(selected_cov.param.value, mode_radio, n_months_slider, start_select, end_select)
 def drilldown_analysis(cov, mode, n_months, start_month, end_month):
     if cov is None or cov == "":
         return pn.pane.Markdown("")
