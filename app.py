@@ -148,7 +148,7 @@ def build_ai_df(filtered_df):
         pred = model.fit_predict(X)
         score = -model.decision_function(X)
 
-        df_ai.loc[temp.index, "AI위험점수"] = score
+        df_ai.loc[temp.index, "AI위험점수"] = pd.Series(score, index=temp.index)
         df_ai.loc[temp.index, "AI판정"] = np.where(pred == -1, "이상징후", "정상")
 
     df_ai["변화율"] = df_ai["변화율"].replace([np.inf, -np.inf], np.nan)
