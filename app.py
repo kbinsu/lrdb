@@ -473,20 +473,28 @@ template = pn.template.FastListTemplate(
     ],
     main=[
         pn.Tabs(
-            ("대시보드", pn.Column(
-                pn.Row(
-                    pn.Column(yaxis_loss_ratio, loss_ratio_plot, margin=(0, 25)),
-                    loss_ratio_table,
-                ),
-                pn.Row(
-                    pn.Column(scatter_plot, margin=(0, 25)),
-                    pn.Column(yaxis_risk_premium_losses, bar_plot),
-                ),
-            )),
-            ("AI 이상탐지", pn.Row(
-                pn.Column(ai_summary, margin=(0, 25)),
-                ai_risk_table,
-            )),
+            ("대시보드",
+             pn.Column(
+                 pn.pane.Markdown("## 📊 현재 화면: 대시보드"),
+                 pn.Row(
+                     pn.Column(yaxis_loss_ratio, loss_ratio_plot, margin=(0, 25)),
+                     loss_ratio_table,
+                 ),
+                 pn.Row(
+                     pn.Column(scatter_plot, margin=(0, 25)),
+                     pn.Column(yaxis_risk_premium_losses, bar_plot),
+                 ),
+             )
+            ),
+            ("AI 이상탐지",
+             pn.Column(
+                 pn.pane.Markdown("## 🤖 현재 화면: AI 이상탐지"),
+                 pn.Row(
+                     pn.Column(ai_summary, margin=(0, 25)),
+                     ai_risk_table,
+                 ),
+             )
+            ),
         )
     ],
     accent_base_color="#88d8b0",
