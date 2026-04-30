@@ -443,6 +443,10 @@ def ai_risk_table(mode, n_months, start_month, end_month):
 
     result = result.sort_values("AI위험점수", ascending=False)
 
+    result["AI판정표시"] = result["AI판정"].map(
+        lambda x: "🔴 이상징후" if x == "이상징후" else "⚪ 정상"
+    )
+
     result = result[
         [
             "마감년월",
@@ -451,7 +455,7 @@ def ai_risk_table(mode, n_months, start_month, end_month):
             "누계손해율(%)",
             "변화율",
             "편차",
-            "AI판정",
+            "AI판정표",
             "AI위험점수",
             "AI설명",
         ]
@@ -462,8 +466,16 @@ def ai_risk_table(mode, n_months, start_month, end_month):
         pagination="remote",
         page_size=10,
         sizing_mode="stretch_width",
+        stylesheets=[
+            """
+            .tabulator-row .tabulator-cell[title="이상징후"] {
+            background-color: #ffcccc !important;
+            color: #b00020 !important;
+            font-weight: bold !important;
+            }
+            """
+        ],
     )
-
 
 image_pane = pn.pane.PNG(
     str(IMAGE_FILE),
