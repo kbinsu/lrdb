@@ -579,6 +579,11 @@ def drilldown_analysis(cov, mode, n_months, start_month, end_month):
 
     row = target.iloc[0]
 
+    if row["AI위험점수"] >= risk_threshold.value:
+        explain = "최근 패턴 대비 이상징후 (threshold 기준 탐지)"
+    else:
+        explain = "정상 범위"
+
     return pn.pane.Markdown(
         f"""
 ### 🔍 Drill-down 자동 분석
@@ -595,7 +600,7 @@ def drilldown_analysis(cov, mode, n_months, start_month, end_month):
 
 **AI 위험점수:** {round(row["AI위험점수"], 4)}
 
-**AI 설명:** {row["AI설명"]}
+**AI 설명:** {explain}
 """
     )
 
