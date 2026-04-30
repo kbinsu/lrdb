@@ -37,6 +37,23 @@ pn.extension(
     ]
 )
 
+pn.config.raw_css.append("""
+/* 비활성 탭 (연하게) */
+.bk-tabs-header .bk-tab:not(.bk-active) {
+    background-color: #f5f5f5 !important;
+    color: #999 !important;
+    font-weight: normal !important;
+}
+
+/* 활성 탭 (진하게) */
+.bk-tabs-header .bk-tab.bk-active {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+    border-bottom: 2px solid #4CAF50 !important;
+}
+""")
+
 BASE_DIR = Path(__file__).resolve().parent
 LOSS_RATIO_FILE = BASE_DIR / "loss_ratio.xlsx"
 YEAR_FILE = BASE_DIR / "year2.xlsx"
