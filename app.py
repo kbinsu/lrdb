@@ -56,7 +56,7 @@ def line_plot(mode, n, start, end):
         y="당월손해율(%)",
         by="담보분류",
         height=400,
-        title="당월 손해율 추이"
+        responsive=True
     )
 
 # ==================================================
@@ -67,10 +67,14 @@ def table_view(mode, n, start, end):
 
     temp = get_df(mode, n, start, end)
 
-    return pn.widgets.Tabulator(temp, page_size=10)
+    return pn.widgets.Tabulator(
+        temp,
+        page_size=10,
+        height=300
+    )
 
 # ==================================================
-# 5. AI (핵심)
+# 5. AI
 # ==================================================
 def build_ai(temp):
 
@@ -131,11 +135,12 @@ def ai_view(mode, n, start, end):
             "AI판정",
             "AI위험점수"
         ]],
-        page_size=10
+        page_size=10,
+        height=300
     )
 
 # ==================================================
-# 7. 레이아웃
+# 7. 레이아웃 (핵심)
 # ==================================================
 template = pn.template.FastListTemplate(
     title="AI 손해율 이상탐지 Dashboard",
@@ -149,14 +154,16 @@ template = pn.template.FastListTemplate(
     ],
 
     main=[
-        pn.pane.Markdown("## 손해율 추이"),
-        line_plot,
+        pn.Column(
+            pn.pane.Markdown("## 손해율 추이"),
+            line_plot,
 
-        pn.pane.Markdown("## 원본 데이터"),
-        table_view,
+            pn.pane.Markdown("## 원본 데이터"),
+            table_view,
 
-        pn.pane.Markdown("## AI 이상탐지 결과"),
-        ai_view,
+            pn.pane.Markdown("## AI 이상탐지 결과"),
+            ai_view,
+        )
     ],
 )
 
