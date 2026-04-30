@@ -225,8 +225,8 @@ def build_ai_df(filtered_df):
     return df_ai
 
 
-@pn.depends(mode_radio, n_months_slider, start_select, end_select)
-def period_summary(mode, n_months, start_month, end_month):
+@pn.depends(mode_radio, n_months_slider, start_select, end_select, risk_threshold)
+def ai_risk_table(mode, n_months, start_month, end_month, threshold):
     start_month, end_month = get_period(
         mode,
         n_months,
@@ -400,6 +400,9 @@ def ai_summary(mode, n_months, start_month, end_month):
         return pn.pane.Markdown("## AI 이상탐지 요약\n\n조회 결과가 없습니다.")
 
     result = result.sort_values("AI위험점수", ascending=False)
+    result["AI판정표시"] = result["AI위험점수"].apply(
+        lambda x: "🔴 이상징후" if x >= threshold else "⚪ 정상"
+    )
     top = result.iloc[0]
 
     return pn.pane.Markdown(
