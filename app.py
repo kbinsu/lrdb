@@ -13,6 +13,8 @@ import hvplot.pandas
 
 from sklearn.ensemble import IsolationForest
 
+selected_cov = pn.widgets.Select(name="선택 담보", options=[])
+
 pn.extension(
     "tabulator",
     sizing_mode="stretch_width",
@@ -131,6 +133,11 @@ risk_threshold = pn.widgets.FloatSlider(
     step=0.0001,
     value=-0.001,   # ⭐ 이걸로 바꿔
     format="0.0000",
+)
+
+selected_cov = pn.widgets.Select(
+    name="선택 담보",
+    options=[]
 )
 
 def get_period(mode, n_months, start_month, end_month):
@@ -494,7 +501,7 @@ def ai_risk_table(mode, n_months, start_month, end_month, threshold):
         ]
     ].head(20)
 
-    return pn.widgets.Tabulator(
+    table = pn.widgets.Tabulator(
         result,
         pagination="remote",
         page_size=10,
@@ -509,6 +516,17 @@ def ai_risk_table(mode, n_months, start_month, end_month, threshold):
             """
         ],
     )
+    
+    def on_click(event):
+        row = event.row
+        if row is not None:
+            selected_cov.value = result.iloc[row]["담보분류"]
+
+    selected_cov.options = result["담보분류"].unique().tolist()
+            
+    table.on_click(on_click)
+    
+    return table
 
 image_pane = pn.pane.PNG(
     str(IMAGE_FILE),
