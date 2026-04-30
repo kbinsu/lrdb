@@ -129,7 +129,8 @@ risk_threshold = pn.widgets.FloatSlider(
     start=-0.05,
     end=0.1,
     step=0.0001,
-    value=-0.005
+    value=-0.001,   # ⭐ 이걸로 바꿔
+    format="0.0000",
 )
 
 def get_period(mode, n_months, start_month, end_month):
