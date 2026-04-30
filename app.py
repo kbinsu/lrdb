@@ -403,7 +403,17 @@ def ai_summary(mode, n_months, start_month, end_month, threshold):
     result["AI판정표시"] = result["AI위험점수"].apply(
         lambda x: "🔴 이상징후" if x >= threshold else "⚪ 정상"
     )
-    top = result.iloc[0]
+
+    alert = result[result["AI위험점수"] >= threshold]
+
+    if len(alert) > 0:
+        cov_text = ", ".join(alert["담보분류"].tolist())
+        judge_text = "이상징후"
+        top = alert.iloc[0]
+    else:
+        cov_text = "없음"
+        judge_text = "정상"
+        top = result.iloc[0]
 
     return pn.pane.Markdown(
         f"""
