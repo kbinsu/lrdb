@@ -18,13 +18,13 @@ pn.extension("tabulator", sizing_mode="stretch_width")
 pn.extension(raw_css=[
 """
 .bk-tabs-header .bk-tab.bk-active {
-    background-color: #88d8b0 !important;
-    color: black !important;
+    background-color: #4CAF50 !important;
+    color: white !important;
     font-weight: bold;
 }
 
 .bk-tabs-header .bk-tab {
-    background-color: #f0f0f0;
+    background-color: #E0E0E0;
 }
 
 .bk-tabs-header .bk-tab:hover {
