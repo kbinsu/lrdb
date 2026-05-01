@@ -481,6 +481,10 @@ def ai_risk_table(mode, n_months, start_month, end_month, threshold):
         lambda x: "🔴 이상징후" if x >= threshold else "⚪ 정상"
     )
 
+    result["AI설명"] = result["AI위험점수"].apply(
+    lambda x: "임계값 기준 이상징후" if x >= threshold else "정상 범위"
+)
+
     alert = result[result["AI위험점수"] >= threshold]
 
     if len(alert) > 0:
