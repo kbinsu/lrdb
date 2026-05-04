@@ -435,9 +435,9 @@ def bar_plot(mode, n_months, start_month, end_month, selected_y):
             if isinstance(tool, HoverTool):
                 tool.tooltips = [
                     ("담보분류", "@{담보분류}"),
-                    (selected_y, f"@{{{selected_y}}}{{0,0.00}}"),
+                    ("값", "$y{0,0.00}"),
                 ]
-
+                
     return temp.hvplot(
         kind="bar",
         x="담보분류",
