@@ -657,7 +657,7 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
 
     return temp.hvplot(
         x="마감년월_dt",
-        y=["당월손해율(%)", "누계손해율(%)"],
+        y=["당월", "누계"],
         group_label="손해율 구분",
         line_width=3,
         height=400,
