@@ -645,8 +645,7 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
             if isinstance(tool, HoverTool):
                 tool.tooltips = [
                     ("마감년월", "@마감년월_dt{%Y-%m}"),
-                    ("당월손해율(%)", "@{당월손해율(%)}{0.00}"),
-                    ("누계손해율(%)", "@{누계손해율(%)}{0.00}"),
+                    ("손해율(%)", "$y{0.00}"),
                 ]
                 tool.formatters = {
                     "@마감년월_dt": "datetime"
@@ -655,6 +654,7 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
     return temp.hvplot(
         x="마감년월_dt",
         y=["당월손해율(%)", "누계손해율(%)"],
+        group_label="손해율 구분",
         line_width=3,
         height=400,
         responsive=True,
