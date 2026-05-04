@@ -290,19 +290,19 @@ def loss_ratio_plot(mode, n_months, start_month, end_month, selected_y):
     x_start = pd.to_datetime(start_month)
     x_end = pd.to_datetime(end_month) + pd.offsets.MonthEnd(0)
 
-return temp.hvplot(
-    x="마감년월_dt",
-    y=selected_y,
-    by="담보분류",
-    line_width=2,
-    height=420,
-    responsive=True,
-    xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
-    xlabel="마감년월",
-    title=f"[ A 원수 손해율 추이 : 주요담보 ] {start_month} ~ {end_month}",
-).opts(
-    xlim=(x_start, x_end)
-)
+    return temp.hvplot(
+        x="마감년월_dt",
+        y=selected_y,
+        by="담보분류",
+        line_width=2,
+        height=420,
+        responsive=True,
+        xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
+        xlabel="마감년월",
+        title=f"[ A 원수 손해율 추이 : 주요담보 ] {start_month} ~ {end_month}",
+    ).opts(
+        xlim=(x_start, x_end)
+    )
 
 @pn.depends(mode_radio, n_months_slider, start_select, end_select, yaxis_loss_ratio)
 def loss_ratio_table(mode, n_months, start_month, end_month, selected_y):
@@ -580,18 +580,18 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
     x_start = pd.to_datetime(start_month)
     x_end = pd.to_datetime(end_month) + pd.offsets.MonthEnd(0)
 
-return temp.hvplot(
-    x="마감년월_dt",
-    y=["당월손해율(%)", "누계손해율(%)"],
-    line_width=3,
-    height=400,
-    responsive=True,
-    xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
-    xlabel="마감년월",
-    title=f"[Drill-down] {cov} 손해율 추이",
-).opts(
-    xlim=(x_start, x_end)
-)
+    return temp.hvplot(
+        x="마감년월_dt",
+        y=["당월손해율(%)", "누계손해율(%)"],
+        line_width=3,
+        height=400,
+        responsive=True,
+        xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
+        xlabel="마감년월",
+        title=f"[Drill-down] {cov} 손해율 추이",
+    ).opts(
+        xlim=(x_start, x_end)
+    )
 
 @pn.depends(selected_cov.param.value, mode_radio, n_months_slider, start_select, end_select)
 def drilldown_analysis(cov, mode, n_months, start_month, end_month):
