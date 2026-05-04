@@ -170,6 +170,8 @@ def get_filtered_df(mode, n_months, start_month, end_month):
         & (df["마감년월"] <= end_month)
     ].copy()
 
+    temp["마감년월"] = pd.to_datetime(temp["마감년월"]).dt.strftime("%Y-%m")
+
     return temp, start_month, end_month
 
 
@@ -366,7 +368,7 @@ def scatter_plot(mode, n_months, start_month, end_month):
     )
 
     temp = temp.dropna(subset=["위험P(억원)", "당월손해율(%)"])
-    x_max = temp["위험P(억원)"].quantile(0.9)
+    x_max = temp["위험P(억원)"].quantile(0.95)
 
     def set_xrange(plot, element):
         plot.state.x_range.start = 0
