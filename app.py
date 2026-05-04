@@ -162,18 +162,20 @@ def get_filtered_df(mode, n_months, start_month, end_month):
         end_month,
     )
 
-    start_month = pd.to_datetime(start_month)
-    end_month = pd.to_datetime(end_month)
+    start_dt = pd.to_datetime(start_month)
+    end_dt = pd.to_datetime(end_month)
 
     temp = df[
-        (df["마감년월"] >= start_month)
-        & (df["마감년월"] <= end_month)
+        (df["마감년월"] >= start_dt)
+        & (df["마감년월"] <= end_dt)
     ].copy()
 
-    temp["마감년월"] = pd.to_datetime(temp["마감년월"]).dt.strftime("%Y-%m")
+    temp["마감년월"] = temp["마감년월"].dt.strftime("%Y-%m")
+
+    start_month = start_dt.strftime("%Y-%m")
+    end_month = end_dt.strftime("%Y-%m")
 
     return temp, start_month, end_month
-
 
 def build_ai_df(filtered_df):
     df_ai = filtered_df.copy()
