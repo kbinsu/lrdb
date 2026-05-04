@@ -287,6 +287,9 @@ def loss_ratio_plot(mode, n_months, start_month, end_month, selected_y):
 
     temp["마감년월_dt"] = pd.to_datetime(temp["마감년월"])
 
+    x_start = pd.to_datetime(start_month)
+    x_end = pd.to_datetime(end_month) + pd.offsets.MonthEnd(0)
+
     return temp.hvplot(
         x="마감년월_dt",
         y=selected_y,
@@ -294,6 +297,7 @@ def loss_ratio_plot(mode, n_months, start_month, end_month, selected_y):
         line_width=2,
         height=420,
         responsive=True,
+        xlim=(x_start, x_end),
         xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
         xlabel="마감년월",
         title=f"[ A 원수 손해율 추이 : 주요담보 ] {start_month} ~ {end_month}",
@@ -396,7 +400,7 @@ def bar_plot(mode, n_months, start_month, end_month, selected_y):
         y=selected_y,
         height=500,
         responsive=True,
-        xlabel="마감년월",
+        xlabel="담보분",
         title=f"[ C 당월 위험보험료/손해액 비교 : 주요담보 ] {end_month}",
     )
 
@@ -573,12 +577,16 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
 
     temp["마감년월_dt"] = pd.to_datetime(temp["마감년월"])
 
+    x_start = pd.to_datetime(start_month)
+    x_end = pd.to_datetime(end_month) + pd.offsets.MonthEnd(0)
+
     return temp.hvplot(
         x="마감년월_dt",
         y=["당월손해율(%)", "누계손해율(%)"],
         line_width=3,
         height=400,
         responsive=True,
+        xlim=(x_start, x_end),
         xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
         xlabel="마감년월",
         title=f"[Drill-down] {cov} 손해율 추이",
@@ -604,8 +612,6 @@ def drilldown_analysis(cov, mode, n_months, start_month, end_month):
 
     if len(target) == 0:
         return pn.pane.Markdown("### 선택 담보 데이터가 없습니다.")
-
-    row = target.iloc[0]
 
     row = target.iloc[0]
 
