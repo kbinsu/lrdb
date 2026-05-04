@@ -5,6 +5,7 @@
 # ==================================================
 
 from pathlib import Path
+from bokeh.models import DatetimeTickFormatter
 
 import numpy as np
 import pandas as pd
@@ -286,13 +287,16 @@ def loss_ratio_plot(mode, n_months, start_month, end_month, selected_y):
         .reset_index(drop=True)
     )
 
+    temp["마감년월_dt"] = pd.to_datetime(temp["마감년월"])
+
     return temp.hvplot(
-        x="마감년월",
+        x="마감년월_dt",
         y=selected_y,
         by="담보분류",
         line_width=2,
         height=420,
         responsive=True,
+        xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
         title=f"[ A 원수 손해율 추이 : 주요담보 ] {start_month} ~ {end_month}",
     )
 
@@ -356,6 +360,10 @@ def scatter_plot(mode, n_months, start_month, end_month):
         legend=True,
         height=500,
         responsive=True,
+        xlim=(
+            max(0, temp["위험P(억원)"].min() * 0.8),
+            temp["위험P(억원)"].max() * 1.1
+        ),
         title=f"[ B 당월 위험보험료 VS 손해율 : 그 외 담보 ] {end_month}",
     )
 
@@ -563,9 +571,9 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
         line_width=3,
         height=400,
         responsive=True,
+        xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
         title=f"[Drill-down] {cov} 손해율 추이",
     )
-
 
 @pn.depends(selected_cov.param.value, mode_radio, n_months_slider, start_select, end_select)
 def drilldown_analysis(cov, mode, n_months, start_month, end_month):
