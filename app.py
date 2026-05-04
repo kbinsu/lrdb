@@ -363,7 +363,7 @@ def scatter_plot(mode, n_months, start_month, end_month):
         height=500,
         responsive=True,
         xlim=(0, x_max * 1.1),
-        xlabel="마감년월",
+        xlabel="위험P(억원)",
         title=f"[ B 당월 위험보험료 VS 손해율 : 그 외 담보 ] {end_month}",
     )
 
