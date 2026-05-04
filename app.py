@@ -374,6 +374,8 @@ def scatter_plot(mode, n_months, start_month, end_month):
         plot.state.x_range.start = 0
         plot.state.x_range.end = x_max * 1.1
 
+    x_max = temp["위험P(억원)"].quantile(0.9)
+
     return temp.hvplot(
         x="위험P(억원)",
         y="당월손해율(%)",
@@ -387,10 +389,10 @@ def scatter_plot(mode, n_months, start_month, end_month):
         xlabel="위험P(억원)",
         title=f"[ B 당월 위험보험료 VS 손해율 : 그 외 담보 ] {end_month}",
     ).opts(
-        hooks=[set_xrange],
+        xlim=(0, x_max * 1.1),   # ⭐ 핵심
         shared_axes=False,
         framewise=True,
-)
+    )
     
 @pn.depends(mode_radio, n_months_slider, start_select, end_select, yaxis_risk_premium_losses)
 def bar_plot(mode, n_months, start_month, end_month, selected_y):
