@@ -431,12 +431,12 @@ def bar_plot(mode, n_months, start_month, end_month, selected_y):
     )
 
     def set_bar_hover(plot, element):
-    for tool in plot.state.tools:
-        if isinstance(tool, HoverTool):
-            tool.tooltips = [
-                ("담보분류", "@{담보분류}"),
-                (selected_y, f"@{{{selected_y}}}{{0,0.00}}"),
-            ]
+        for tool in plot.state.tools:
+            if isinstance(tool, HoverTool):
+                tool.tooltips = [
+                    ("담보분류", "@{담보분류}"),
+                    (selected_y, f"@{{{selected_y}}}{{0,0.00}}"),
+                ]
 
     return temp.hvplot(
         kind="bar",
