@@ -296,6 +296,10 @@ def loss_ratio_plot(mode, n_months, start_month, end_month, selected_y):
     x_start = pd.to_datetime(start_month)
     x_end = pd.to_datetime(end_month) + pd.offsets.MonthEnd(0)
 
+    def set_xrange(plot, element):
+        plot.state.x_range.start = x_start
+        plot.state.x_range.end = x_end
+
     return temp.hvplot(
         x="마감년월_dt",
         y=selected_y,
@@ -307,9 +311,9 @@ def loss_ratio_plot(mode, n_months, start_month, end_month, selected_y):
         xlabel="마감년월",
         title=f"[ A 원수 손해율 추이 : 주요담보 ] {start_month} ~ {end_month}",
     ).opts(
-        xlim=(x_start, x_end)
+        hooks=[set_xrange]
     )
-
+    
 @pn.depends(mode_radio, n_months_slider, start_select, end_select, yaxis_loss_ratio)
 def loss_ratio_table(mode, n_months, start_month, end_month, selected_y):
     temp, start_month, end_month = get_filtered_df(
@@ -362,6 +366,10 @@ def scatter_plot(mode, n_months, start_month, end_month):
     temp = temp.dropna(subset=["위험P(억원)", "당월손해율(%)"])
     x_max = temp["위험P(억원)"].quantile(0.9)
 
+    def set_xrange(plot, element):
+        plot.state.x_range.start = 0
+        plot.state.x_range.end = x_max * 1.1
+
     return temp.hvplot(
         x="위험P(억원)",
         y="당월손해율(%)",
@@ -372,11 +380,11 @@ def scatter_plot(mode, n_months, start_month, end_month):
         legend=True,
         height=500,
         responsive=True,
-        xlim=(0, x_max * 1.1),
         xlabel="위험P(억원)",
         title=f"[ B 당월 위험보험료 VS 손해율 : 그 외 담보 ] {end_month}",
+    ).opts(
+        hooks=[set_xrange]
     )
-
 
 @pn.depends(mode_radio, n_months_slider, start_select, end_select, yaxis_risk_premium_losses)
 def bar_plot(mode, n_months, start_month, end_month, selected_y):
@@ -586,6 +594,10 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
     x_start = pd.to_datetime(start_month)
     x_end = pd.to_datetime(end_month) + pd.offsets.MonthEnd(0)
 
+    def set_xrange(plot, element):
+        plot.state.x_range.start = x_start
+        plot.state.x_range.end = x_end
+
     return temp.hvplot(
         x="마감년월_dt",
         y=["당월손해율(%)", "누계손해율(%)"],
@@ -596,7 +608,7 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
         xlabel="마감년월",
         title=f"[Drill-down] {cov} 손해율 추이",
     ).opts(
-        xlim=(x_start, x_end)
+        hooks=[set_xrange]
     )
 
 @pn.depends(selected_cov.param.value, mode_radio, n_months_slider, start_select, end_select)
