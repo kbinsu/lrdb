@@ -664,12 +664,13 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
         responsive=True,
         xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
         xlabel="마감년월",
+        ylabel="손해율(%)",
         title=f"[Drill-down] {cov} 손해율 추이",
     ).opts(
         hooks=[set_xrange],
         shared_axes=False,
         framewise=True,
-)
+    )
 
 @pn.depends(selected_cov.param.value, mode_radio, n_months_slider, start_select, end_select)
 def drilldown_analysis(cov, mode, n_months, start_month, end_month):
