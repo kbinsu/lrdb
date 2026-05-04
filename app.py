@@ -14,6 +14,15 @@ import hvplot.pandas
 
 from sklearn.ensemble import IsolationForest
 
+def set_line_hover(plot, element):
+    for tool in plot.state.tools:
+        if isinstance(tool, HoverTool):
+            tool.tooltips = [
+                ("마감년월", "@마감년월"),
+                ("당월손해율(%)", "@{당월손해율(%)}{0.00}"),
+                ("누계손해율(%)", "@{누계손해율(%)}{0.00}"),
+            ]
+
 pn.extension(
     "tabulator",
     sizing_mode="stretch_width",
@@ -631,12 +640,13 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
     def set_xrange(plot, element):
         plot.state.x_range.start = x_start
         plot.state.x_range.end = x_end
-
+    
         for tool in plot.state.tools:
             if isinstance(tool, HoverTool):
                 tool.tooltips = [
                     ("마감년월", "@마감년월_dt{%Y-%m}"),
-                    ("값", "$y{0.00}"),
+                    ("당월손해율(%)", "@{당월손해율(%)}{0.00}"),
+                    ("누계손해율(%)", "@{누계손해율(%)}{0.00}"),
                 ]
                 tool.formatters = {
                     "@마감년월_dt": "datetime"
