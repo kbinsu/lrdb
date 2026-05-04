@@ -295,7 +295,7 @@ def loss_ratio_plot(mode, n_months, start_month, end_month, selected_y):
         height=420,
         responsive=True,
         xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
-        xlabel="마감년월"
+        xlabel="마감년월",
         title=f"[ A 원수 손해율 추이 : 주요담보 ] {start_month} ~ {end_month}",
     )
 
@@ -580,7 +580,7 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
         height=400,
         responsive=True,
         xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
-        xlabel="마감년월"
+        xlabel="마감년월",
         title=f"[Drill-down] {cov} 손해율 추이",
     )
 
