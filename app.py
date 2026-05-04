@@ -24,6 +24,9 @@ pn.extension(
     color: #666;
 }
 
+pn.config.session_destroyed = 'cleanup'
+pn.config.reuse_sessions = False
+
 .bk-tabs-header .bk-tab.bk-active {
     background-color: #88d8b0 !important;
     color: black !important;
