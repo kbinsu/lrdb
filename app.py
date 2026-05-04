@@ -18,9 +18,9 @@ def set_line_hover(plot, element):
     for tool in plot.state.tools:
         if isinstance(tool, HoverTool):
             tool.tooltips = [
-                ("마감년월", "@마감년월"),
-                ("당월손해율(%)", "@{당월손해율(%)}{0.00}"),
-                ("누계손해율(%)", "@{누계손해율(%)}{0.00}"),
+                ("마감년월", "@마감년월_dt{%Y-%m}"),
+                ("항목", "$name"),
+                ("손해율(%)", "$y{0.00}"),
             ]
 
 pn.extension(
