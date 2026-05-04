@@ -5,7 +5,7 @@
 # ==================================================
 
 from pathlib import Path
-from bokeh.models import DatetimeTickFormatter
+from bokeh.models import DatetimeTickFormatter, HoverTool
 
 import numpy as np
 import pandas as pd
@@ -304,6 +304,17 @@ def loss_ratio_plot(mode, n_months, start_month, end_month, selected_y):
         plot.state.x_range.start = x_start
         plot.state.x_range.end = x_end
 
+        for tool in plot.state.tools:
+            if isinstance(tool, HoverTool):
+                tool.tooltips = [
+                    ("마감년월", "@마감년월_dt{%Y-%m}"),
+                    ("담보분류", "@{담보분류}"),
+                    (selected_y, f"@{{{selected_y}}}{{0.00}}"),
+                ]
+                tool.formatters = {
+                    "@마감년월_dt": "datetime"
+                }
+
     return temp.hvplot(
         x="마감년월_dt",
         y=selected_y,
@@ -419,6 +430,14 @@ def bar_plot(mode, n_months, start_month, end_month, selected_y):
         .reset_index(drop=True)
     )
 
+    def set_bar_hover(plot, element):
+    for tool in plot.state.tools:
+        if isinstance(tool, HoverTool):
+            tool.tooltips = [
+                ("담보분류", "@{담보분류}"),
+                (selected_y, f"@{{{selected_y}}}{{0,0.00}}"),
+            ]
+
     return temp.hvplot(
         kind="bar",
         x="담보분류",
@@ -427,6 +446,10 @@ def bar_plot(mode, n_months, start_month, end_month, selected_y):
         responsive=True,
         xlabel="담보분류",
         title=f"[ C 당월 위험보험료/손해액 비교 : 주요담보 ] {end_month}",
+    ).opts(
+        hooks=[set_bar_hover],
+        shared_axes=False,
+        framewise=True,
     )
 
 
@@ -608,6 +631,16 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
     def set_xrange(plot, element):
         plot.state.x_range.start = x_start
         plot.state.x_range.end = x_end
+
+        for tool in plot.state.tools:
+            if isinstance(tool, HoverTool):
+                tool.tooltips = [
+                    ("마감년월", "@마감년월_dt{%Y-%m}"),
+                    ("값", "$y{0.00}"),
+                ]
+                tool.formatters = {
+                    "@마감년월_dt": "datetime"
+                }
 
     return temp.hvplot(
         x="마감년월_dt",
