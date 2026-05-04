@@ -580,8 +580,6 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
     temp["마감년월_dt"] = pd.to_datetime(temp["마감년월"])
     temp = temp.sort_values("마감년월_dt")
 
-    temp["마감년월_dt"] = pd.to_datetime(temp["마감년월"])
-
     x_start = pd.to_datetime(start_month)
     x_end = pd.to_datetime(end_month) + pd.offsets.MonthEnd(0)
 
