@@ -14,8 +14,6 @@ import hvplot.pandas
 
 from sklearn.ensemble import IsolationForest
 
-selected_cov = pn.widgets.Select(name="선택 담보", options=[])
-
 pn.extension(
     "tabulator",
     sizing_mode="stretch_width",
@@ -297,6 +295,7 @@ def loss_ratio_plot(mode, n_months, start_month, end_month, selected_y):
         height=420,
         responsive=True,
         xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
+        xlabel="마감년월"
         title=f"[ A 원수 손해율 추이 : 주요담보 ] {start_month} ~ {end_month}",
     )
 
@@ -350,6 +349,9 @@ def scatter_plot(mode, n_months, start_month, end_month):
         .reset_index(drop=True)
     )
 
+    temp = temp.dropna(subset=["위험P(억원)", "당월손해율(%)"])
+    x_max = temp["위험P(억원)"].quantile(0.98)
+
     return temp.hvplot(
         x="위험P(억원)",
         y="당월손해율(%)",
@@ -360,10 +362,8 @@ def scatter_plot(mode, n_months, start_month, end_month):
         legend=True,
         height=500,
         responsive=True,
-        xlim=(
-            max(0, temp["위험P(억원)"].min() * 0.8),
-            temp["위험P(억원)"].max() * 1.1
-        ),
+        xlim=(0, x_max * 1.1),
+        xlabel="마감년월",
         title=f"[ B 당월 위험보험료 VS 손해율 : 그 외 담보 ] {end_month}",
     )
 
@@ -396,6 +396,7 @@ def bar_plot(mode, n_months, start_month, end_month, selected_y):
         y=selected_y,
         height=500,
         responsive=True,
+        xlabel="마감년월",
         title=f"[ C 당월 위험보험료/손해액 비교 : 주요담보 ] {end_month}",
     )
 
@@ -540,10 +541,17 @@ def ai_risk_table(mode, n_months, start_month, end_month, threshold):
             selected_cov.value = result.iloc[row]["담보분류"]
 
     new_options = result["담보분류"].unique().tolist()
-    selected_cov.options = new_options
     
-    if selected_cov.value not in new_options:
-        selected_cov.value = new_options[0] if len(new_options) > 0 else None
+    if selected_cov.options != new_options:
+        old_value = selected_cov.value
+        selected_cov.options = new_options
+        
+        if old_value in new_options:
+            selected_cov.value = old_value
+        elif len(new_options) > 0:
+            selected_cov.value = new_options[0]
+        else:
+            selected_cov.value = None
             
     table.on_click(on_click)
     
@@ -572,6 +580,7 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
         height=400,
         responsive=True,
         xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
+        xlabel="마감년월"
         title=f"[Drill-down] {cov} 손해율 추이",
     )
 
