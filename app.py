@@ -63,10 +63,10 @@ IMAGE_FILE = BASE_DIR / "health.png"
 df = pd.read_excel(LOSS_RATIO_FILE)
 df2 = pd.read_excel(YEAR_FILE)
 
-df["마감년월"] = pd.to_datetime(df["마감년월"]).dt.strftime("%Y-%m")
+df["마감년월"] = pd.to_datetime(df["마감년월"])
 df2["year5"] = pd.to_datetime(df2["year5"]).dt.strftime("%Y-%m")
 
-month_options = sorted(df["마감년월"].dropna().unique().tolist())
+month_options = sorted(df["마감년월"].dt.strftime("%Y-%m").unique().tolist())
 
 end_idx = len(month_options) - 1
 start_idx = max(0, end_idx - 59)
@@ -158,6 +158,9 @@ def get_filtered_df(mode, n_months, start_month, end_month):
         start_month,
         end_month,
     )
+
+    start_month = pd.to_datetime(start_month)
+    end_month = pd.to_datetime(end_month)
 
     temp = df[
         (df["마감년월"] >= start_month)
@@ -354,7 +357,7 @@ def scatter_plot(mode, n_months, start_month, end_month):
     )
 
     temp = temp.dropna(subset=["위험P(억원)", "당월손해율(%)"])
-    x_max = temp["위험P(억원)"].quantile(0.98)
+    x_max = temp["위험P(억원)"].quantile(0.9)
 
     return temp.hvplot(
         x="위험P(억원)",
@@ -573,7 +576,9 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
         end_month,
     )
 
-    temp = temp[temp["담보분류"] == cov].sort_values("마감년월")
+    temp = temp[temp["담보분류"] == cov]
+    temp["마감년월_dt"] = pd.to_datetime(temp["마감년월"])
+    temp = temp.sort_values("마감년월_dt")
 
     temp["마감년월_dt"] = pd.to_datetime(temp["마감년월"])
 
