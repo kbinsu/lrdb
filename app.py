@@ -555,8 +555,10 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
 
     temp = temp[temp["담보분류"] == cov].sort_values("마감년월")
 
+    temp["마감년월_dt"] = pd.to_datetime(temp["마감년월"])
+
     return temp.hvplot(
-        x="마감년월",
+        x="마감년월_dt",
         y=["당월손해율(%)", "누계손해율(%)"],
         line_width=3,
         height=400,
