@@ -704,7 +704,9 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
         xlabel="마감년월",
         ylabel="손해율(%)",          # y축 라벨
         legend_position="right",     # 범례 그래프 밖 오른쪽
+        legend_title="손해율 구분",
         show_legend=True,
+        xrotation=0,   # ⭐ 추가 (영문 방지 안정화)
         title=f"[Drill-down] {cov} 손해율 추이",
     )
 
