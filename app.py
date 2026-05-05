@@ -820,6 +820,7 @@ template = pn.template.FastListTemplate(
                 drilldown_plot,
                 drilldown_analysis,
             )),
+            dynamic=True   # 👈 여기 한 줄 추가
         )
     ],
     accent_base_color="#88d8b0",
