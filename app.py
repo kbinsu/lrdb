@@ -69,20 +69,35 @@ pn.config.raw_css.append("""
 
 BASE_DIR = Path(__file__).resolve().parent
 
+# ⭐ 1️⃣ 먼저 파일 경로 정의
+LOSS_RATIO_FILE = BASE_DIR / "loss_ratio.xlsx"
+YEAR_FILE = BASE_DIR / "year2.xlsx"
+IMAGE_FILE = BASE_DIR / "health.png"
+
+
+# ⭐ 2️⃣ 그 다음 load_data
 @pn.cache(ttl=3600)
 def load_data():
-    df = pd.read_excel(LOSS_RATIO_FILE)
-    df2 = pd.read_excel(YEAR_FILE)
+    parquet_file = BASE_DIR / "loss_ratio.parquet"
+    parquet_file2 = BASE_DIR / "year2.parquet"
+
+    if parquet_file.exists() and parquet_file2.exists():
+        df = pd.read_parquet(parquet_file)
+        df2 = pd.read_parquet(parquet_file2)
+    else:
+        df = pd.read_excel(LOSS_RATIO_FILE)
+        df2 = pd.read_excel(YEAR_FILE)
+
+        df.to_parquet(parquet_file)
+        df2.to_parquet(parquet_file2)
 
     df["마감년월"] = pd.to_datetime(df["마감년월"])
     df2["year5"] = pd.to_datetime(df2["year5"]).dt.strftime("%Y-%m")
 
     return df, df2
-    
-LOSS_RATIO_FILE = BASE_DIR / "loss_ratio.xlsx"
-YEAR_FILE = BASE_DIR / "year2.xlsx"
-IMAGE_FILE = BASE_DIR / "health.png"
 
+
+# ⭐ 3️⃣ 마지막 실행
 df, df2 = load_data()
 
 month_options = sorted(df["마감년월"].dt.strftime("%Y-%m").unique().tolist())
