@@ -655,21 +655,54 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
                     "@마감년월_dt": "datetime"
                 }
 
-    return temp.hvplot(
+    line1 = temp.hvplot(
         x="마감년월_dt",
-        y=["당월", "누계"],
-        group_label="손해율 구분",
+        y="당월",
         line_width=3,
-        height=400,
-        responsive=True,
-        xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
-        xlabel="마감년월",
-        ylabel="손해율(%)",
-        title=f"[Drill-down] {cov} 손해율 추이",
-    ).opts(
-        hooks=[set_xrange],
+        color="blue",
+        label="당월손해율(%)"
+    )
+
+    line2 = temp.hvplot(
+        x="마감년월_dt",
+        y="누계",
+        line_width=3,
+        color="red",
+        label="누계손해율(%)"
+    )
+    
+    def hook(plot, element):
+        plot.state.x_range.start = x_start
+        plot.state.x_range.end = x_end
+    
+        hover1 = HoverTool(
+            tooltips=[
+                ("마감년월", "@마감년월_dt{%Y-%m}"),
+                ("당월손해율(%)", "@당월{0.00}")
+            ],
+            formatters={"@마감년월_dt": "datetime"},
+            renderers=[plot.state.renderers[0]]
+        )
+    
+        hover2 = HoverTool(
+            tooltips=[
+                ("마감년월", "@마감년월_dt{%Y-%m}"),
+                ("누계손해율(%)", "@누계{0.00}")
+            ],
+            formatters={"@마감년월_dt": "datetime"},
+            renderers=[plot.state.renderers[1]]
+        )
+    
+        plot.state.tools = [hover1, hover2]
+    
+    return (line1 * line2).opts(
+        hooks=[hook],
         shared_axes=False,
         framewise=True,
+        height=400,
+        responsive=True,
+        xlabel="마감년월",
+        title=f"[Drill-down] {cov} 손해율 추이"
     )
 
 @pn.depends(selected_cov.param.value, mode_radio, n_months_slider, start_select, end_select)
