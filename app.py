@@ -695,19 +695,23 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
     
         plot.state.tools = [hover1, hover2]
     
-    return (line1 * line2).opts(
-        hooks=[hook],
-        shared_axes=False,
-        framewise=True,
-        height=400,
-        responsive=True,
-        xlabel="마감년월",
-        ylabel="손해율(%)",          # y축 라벨
-        legend_position="right",     # 범례 그래프 밖 오른쪽
-        legend_title="손해율 구분",
-        show_legend=True,
-        xrotation=0,   # ⭐ 추가 (영문 방지 안정화)
-        title=f"[Drill-down] {cov} 손해율 추이",
+    legend_title_pane = pn.pane.Markdown("손해율 구분")
+
+    return pn.Column(
+        legend_title_pane,
+        (line1 * line2).opts(
+            hooks=[hook],
+            shared_axes=False,
+            framewise=True,
+            height=400,
+            responsive=True,
+            xlabel="마감년월",
+            ylabel="손해율(%)",
+            legend_position="right",
+            show_legend=True,
+            xrotation=0,
+            title=f"[Drill-down] {cov} 손해율 추이",
+        )
     )
 
 @pn.depends(selected_cov.param.value, mode_radio, n_months_slider, start_select, end_select)
