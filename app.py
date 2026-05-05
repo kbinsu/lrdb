@@ -338,7 +338,8 @@ def loss_ratio_plot(mode, n_months, start_month, end_month, selected_y):
         hooks=[set_xrange],
         shared_axes=False,
         framewise=True,
-)
+        apply_ranges=True,
+    )
     
 @pn.depends(mode_radio, n_months_slider, start_select, end_select, yaxis_loss_ratio)
 def loss_ratio_table(mode, n_months, start_month, end_month, selected_y):
@@ -674,6 +675,10 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
     def hook(plot, element):
         plot.state.x_range.start = x_start
         plot.state.x_range.end = x_end
+        plot.state.xaxis[0].formatter = DatetimeTickFormatter(
+            months="%Y-%m",
+            years="%Y-%m"
+        )
     
         hover1 = HoverTool(
             tooltips=[
@@ -695,14 +700,11 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
     
         plot.state.tools = [hover1, hover2]
     
-    legend_title_pane = pn.pane.Markdown("손해율 구분")
-
-    return pn.Column(
-        legend_title_pane,
-        (line1 * line2).opts(
+        return (line1 * line2).opts(
             hooks=[hook],
             shared_axes=False,
             framewise=True,
+            apply_ranges=True,
             height=400,
             responsive=True,
             xlabel="마감년월",
