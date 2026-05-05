@@ -823,22 +823,12 @@ template = pn.template.FastListTemplate(
             ("📊 대시보드", pn.Column(
                 pn.pane.Markdown("## 📊 대시보드"),
                 pn.Row(
-                    pn.Column(
-                        yaxis_loss_ratio,
-                        pn.panel(loss_ratio_plot, loading_indicator=True),
-                        margin=(0, 25)
-                    ),
+                    pn.Column(yaxis_loss_ratio, loss_ratio_plot, margin=(0, 25)),
                     loss_ratio_table,
                 ),
                 pn.Row(
-                    pn.Column(
-                        pn.panel(scatter_plot, loading_indicator=True),
-                        margin=(0, 25)
-                    ),
-                    pn.Column(
-                        yaxis_risk_premium_losses,
-                        pn.panel(bar_plot, loading_indicator=True)
-                    ),
+                    pn.Column(scatter_plot, margin=(0, 25)),
+                    pn.Column(yaxis_risk_premium_losses, bar_plot),
                 ),
             )),
             ("🤖 AI 이상탐지", pn.Column(
@@ -849,7 +839,7 @@ template = pn.template.FastListTemplate(
                 ),
                 pn.pane.Markdown("## 📊 Drill-down 분석"),
                 selected_cov,
-                pn.panel(drilldown_plot, loading_indicator=True),
+                drilldown_plot,
                 drilldown_analysis,
             )),
             dynamic=True   # 👈 여기 한 줄 추가
