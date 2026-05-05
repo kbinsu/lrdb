@@ -186,6 +186,19 @@ def get_filtered_df(mode, n_months, start_month, end_month):
 
     return temp, start_month, end_month
 
+@pn.cache
+def get_ai_df_cached(mode, n_months, start_month, end_month):
+    temp, start_month, end_month = get_filtered_df(
+        mode,
+        n_months,
+        start_month,
+        end_month,
+    )
+
+    ai_df = build_ai_df(temp)
+
+    return ai_df, start_month, end_month
+
 def build_ai_df(filtered_df):
     df_ai = filtered_df.copy()
 
@@ -462,14 +475,12 @@ def bar_plot(mode, n_months, start_month, end_month, selected_y):
 
 @pn.depends(mode_radio, n_months_slider, start_select, end_select, risk_threshold)
 def ai_summary(mode, n_months, start_month, end_month, threshold):
-    temp, start_month, end_month = get_filtered_df(
+    ai_df, start_month, end_month = get_ai_df_cached(
         mode,
         n_months,
         start_month,
         end_month,
     )
-
-    ai_df = build_ai_df(temp)
     result = ai_df[ai_df["마감년월"] == end_month].copy()
 
     if len(result) == 0:
@@ -533,14 +544,12 @@ AI 이상징후 담보는 당월 손해율 급등 여부, 고액 사고 발생 �
 
 @pn.depends(mode_radio, n_months_slider, start_select, end_select, risk_threshold)
 def ai_risk_table(mode, n_months, start_month, end_month, threshold):
-    temp, start_month, end_month = get_filtered_df(
+    ai_df, start_month, end_month = get_ai_df_cached(
         mode,
         n_months,
         start_month,
         end_month,
     )
-
-    ai_df = build_ai_df(temp)
     result = ai_df[ai_df["마감년월"] == end_month].copy()
 
     result = result.sort_values("AI위험점수", ascending=False)
@@ -720,14 +729,12 @@ def drilldown_analysis(cov, mode, n_months, start_month, end_month):
     if cov is None or cov == "":
         return pn.pane.Markdown("")
 
-    temp, start_month, end_month = get_filtered_df(
+    ai_df, start_month, end_month = get_ai_df_cached(
         mode,
         n_months,
         start_month,
         end_month,
     )
-
-    ai_df = build_ai_df(temp)
     target = ai_df[
         (ai_df["담보분류"] == cov)
         & (ai_df["마감년월"] == end_month)
