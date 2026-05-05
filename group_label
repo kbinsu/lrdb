@@ -702,7 +702,10 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
         height=400,
         responsive=True,
         xlabel="마감년월",
-        title=f"[Drill-down] {cov} 손해율 추이"
+        ylabel="손해율(%)",          # y축 라벨
+        legend_position="right",     # 범례 그래프 밖 오른쪽
+        show_legend=True,
+        title=f"[Drill-down] {cov} 손해율 추이",
     )
 
 @pn.depends(selected_cov.param.value, mode_radio, n_months_slider, start_select, end_select)
