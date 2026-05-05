@@ -661,59 +661,62 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
         y="당월",
         line_width=3,
         color="blue",
-        label="당월손해율(%)"
+        label="당월손해율(%)",
     )
-
+    
     line2 = temp.hvplot(
         x="마감년월_dt",
         y="누계",
         line_width=3,
         color="red",
-        label="누계손해율(%)"
+        label="누계손해율(%)",
     )
     
     def hook(plot, element):
         plot.state.x_range.start = x_start
         plot.state.x_range.end = x_end
+    
         plot.state.xaxis[0].formatter = DatetimeTickFormatter(
             months="%Y-%m",
-            years="%Y-%m"
+            years="%Y-%m",
         )
+    
+        if plot.state.legend:
+            plot.state.legend[0].title = "손해율 구분"
     
         hover1 = HoverTool(
             tooltips=[
                 ("마감년월", "@마감년월_dt{%Y-%m}"),
-                ("당월손해율(%)", "@당월{0.00}")
+                ("당월손해율(%)", "@당월{0.00}"),
             ],
             formatters={"@마감년월_dt": "datetime"},
-            renderers=[plot.state.renderers[0]]
+            renderers=[plot.state.renderers[0]],
         )
     
         hover2 = HoverTool(
             tooltips=[
                 ("마감년월", "@마감년월_dt{%Y-%m}"),
-                ("누계손해율(%)", "@누계{0.00}")
+                ("누계손해율(%)", "@누계{0.00}"),
             ],
             formatters={"@마감년월_dt": "datetime"},
-            renderers=[plot.state.renderers[1]]
+            renderers=[plot.state.renderers[1]],
         )
     
         plot.state.tools = [hover1, hover2]
     
-        return (line1 * line2).opts(
-            hooks=[hook],
-            shared_axes=False,
-            framewise=True,
-            apply_ranges=True,
-            height=400,
-            responsive=True,
-            xlabel="마감년월",
-            ylabel="손해율(%)",
-            legend_position="right",
-            show_legend=True,
-            xrotation=0,
-            title=f"[Drill-down] {cov} 손해율 추이",
-        )
+    return (line1 * line2).opts(
+        hooks=[hook],
+        shared_axes=False,
+        framewise=True,
+        apply_ranges=True,
+        height=400,
+        responsive=True,
+        xlabel="마감년월",
+        ylabel="손해율(%)",
+        legend_position="right",
+        show_legend=True,
+        xrotation=0,
+        title=f"[Drill-down] {cov} 손해율 추이",
     )
 
 @pn.depends(selected_cov.param.value, mode_radio, n_months_slider, start_select, end_select)
