@@ -186,7 +186,7 @@ def get_filtered_df(mode, n_months, start_month, end_month):
 
     return temp, start_month, end_month
 
-@pn.cache
+@pn.cache(ttl=3600)
 def get_ai_df_cached(mode, n_months, start_month, end_month):
     temp, start_month, end_month = get_filtered_df(
         mode,
