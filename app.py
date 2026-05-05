@@ -330,7 +330,6 @@ def loss_ratio_plot(mode, n_months, start_month, end_month, selected_y):
         by="담보분류",
         line_width=2,
         height=420,
-        responsive=True,
         xformatter=DatetimeTickFormatter(months="%Y-%m", years="%Y-%m"),
         xlabel="마감년월",
         title=f"[ A 원수 손해율 추이 : 주요담보 ] {start_month} ~ {end_month}",
@@ -409,7 +408,6 @@ def scatter_plot(mode, n_months, start_month, end_month):
         alpha=0.7,
         legend=True,
         height=500,
-        responsive=True,
         xlabel="위험P(억원)",
         title=f"[ B 당월 위험보험료 VS 손해율 : 그 외 담보 ] {end_month}",
     ).opts(
@@ -453,7 +451,6 @@ def bar_plot(mode, n_months, start_month, end_month, selected_y):
         x="담보분류",
         y=selected_y,
         height=500,
-        responsive=True,
         xlabel="담보분류",
         title=f"[ C 당월 위험보험료/손해액 비교 : 주요담보 ] {end_month}",
     ).opts(
@@ -710,7 +707,6 @@ def drilldown_plot(cov, mode, n_months, start_month, end_month):
         framewise=True,
         apply_ranges=True,
         height=400,
-        responsive=True,
         xlabel="마감년월",
         ylabel="손해율(%)",
         legend_position="right",
