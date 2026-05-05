@@ -68,15 +68,22 @@ pn.config.raw_css.append("""
 """)
 
 BASE_DIR = Path(__file__).resolve().parent
+
+@pn.cache(ttl=3600)
+def load_data():
+    df = pd.read_excel(LOSS_RATIO_FILE)
+    df2 = pd.read_excel(YEAR_FILE)
+
+    df["마감년월"] = pd.to_datetime(df["마감년월"])
+    df2["year5"] = pd.to_datetime(df2["year5"]).dt.strftime("%Y-%m")
+
+    return df, df2
+    
 LOSS_RATIO_FILE = BASE_DIR / "loss_ratio.xlsx"
 YEAR_FILE = BASE_DIR / "year2.xlsx"
 IMAGE_FILE = BASE_DIR / "health.png"
 
-df = pd.read_excel(LOSS_RATIO_FILE)
-df2 = pd.read_excel(YEAR_FILE)
-
-df["마감년월"] = pd.to_datetime(df["마감년월"])
-df2["year5"] = pd.to_datetime(df2["year5"]).dt.strftime("%Y-%m")
+df, df2 = load_data()
 
 month_options = sorted(df["마감년월"].dt.strftime("%Y-%m").unique().tolist())
 
