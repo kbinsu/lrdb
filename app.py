@@ -17,8 +17,6 @@ from sklearn.ensemble import IsolationForest
 import os
 from openai import OpenAI
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
 def set_line_hover(plot, element):
     for tool in plot.state.tools:
         if isinstance(tool, HoverTool):
@@ -331,6 +329,13 @@ AI설명: {row["AI설명"]}
 
 
 def generate_llm_answer(user_question, context_text):
+    api_key = os.environ.get("OPENAI_API_KEY")
+
+    if api_key is None:
+        return "OPENAI_API_KEY 환경변수가 설정되지 않았습니다. Render 환경변수에 API Key를 등록한 뒤 다시 실행하세요."
+
+    client = OpenAI(api_key=api_key)
+
     prompt = f"""
 너는 장기보험 손해율 이상징후 판단지원 AI Agent다.
 
