@@ -7,3 +7,4 @@ bokeh
 holoviews
 scikit-learn
 pyarrow
+openai
