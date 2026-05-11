@@ -14,6 +14,11 @@ import hvplot.pandas
 
 from sklearn.ensemble import IsolationForest
 
+import os
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
 def set_line_hover(plot, element):
     for tool in plot.state.tools:
         if isinstance(tool, HoverTool):
@@ -173,6 +178,22 @@ selected_cov = pn.widgets.Select(
     options=[]
 )
 
+agent_question = pn.widgets.TextInput(
+    name="AI Agent 질문",
+    value="최근 가장 위험한 담보는?",
+    placeholder="예: 왜 위험하다고 판단했어?",
+)
+
+agent_button = pn.widgets.Button(
+    name="Agent 답변 생성",
+    button_type="primary",
+)
+
+agent_answer = pn.pane.Markdown(
+    "질문을 입력한 후 Agent 답변 생성을 클릭하세요.",
+    sizing_mode="stretch_width",
+)
+
 def get_period(mode, n_months, start_month, end_month):
     if mode == "최근 N개월":
         end_idx = month_options.index(end_month)
@@ -284,6 +305,57 @@ def build_ai_df(filtered_df):
     df_ai["AI설명"] = df_ai.apply(make_reason, axis=1)
 
     return df_ai
+
+def make_agent_context(ai_df, end_month, threshold):
+    result = ai_df[ai_df["마감년월"] == end_month].copy()
+    result = result.sort_values("AI위험점수", ascending=False).head(5)
+
+    lines = []
+
+    for _, row in result.iterrows():
+        judge = "이상징후" if row["AI위험점수"] >= threshold else "정상"
+
+        lines.append(f"""
+담보분류: {row["담보분류"]}
+마감년월: {row["마감년월"]}
+당월손해율: {round(row["당월손해율(%)"], 2)}%
+누계손해율: {round(row["누계손해율(%)"], 2)}%
+전월 대비 변화율: {round(row["변화율"], 4) if pd.notna(row["변화율"]) else "계산불가"}
+당월-누계 편차: {round(row["편차"], 2) if pd.notna(row["편차"]) else "계산불가"}
+AI위험점수: {round(row["AI위험점수"], 4)}
+AI판정: {judge}
+AI설명: {row["AI설명"]}
+""")
+
+    return "\n".join(lines)
+
+
+def generate_llm_answer(user_question, context_text):
+    prompt = f"""
+너는 장기보험 손해율 이상징후 판단지원 AI Agent다.
+
+아래 KPI Retrieval 결과만 근거로 답변하라.
+근거가 없는 내용은 추정하지 말고 "추가 확인 필요"라고 답변하라.
+
+[사용자 질문]
+{user_question}
+
+[KPI Retrieval 결과]
+{context_text}
+
+[답변 형식]
+1. 핵심 판단
+2. 위험 판단 근거
+3. 우선 점검 대상
+4. 실무자 확인 포인트
+"""
+
+    response = client.responses.create(
+        model="gpt-4o-mini",
+        input=prompt,
+    )
+
+    return response.output_text
 
 
 @pn.depends(mode_radio, n_months_slider, start_select, end_select)
@@ -797,7 +869,37 @@ image_pane = pn.pane.PNG(
     sizing_mode="scale_width",
 )
 
+def on_agent_click(event):
+    ai_df, start_month, end_month = get_ai_df_cached(
+        mode_radio.value,
+        n_months_slider.value,
+        start_select.value,
+        end_select.value,
+    )
 
+    context_text = make_agent_context(
+        ai_df,
+        end_month,
+        risk_threshold.value,
+    )
+
+    try:
+        answer = generate_llm_answer(
+            agent_question.value,
+            context_text,
+        )
+        agent_answer.object = answer
+
+    except Exception as e:
+        agent_answer.object = f"""
+### Agent 답변 생성 오류
+
+API 키 또는 OpenAI 연결 상태를 확인하세요.
+
+오류 내용: {e}
+"""
+
+agent_button.on_click(on_agent_click)
 
 template = pn.template.FastListTemplate(
     title="담보분류별 원수손해율 Dashboard",
@@ -841,6 +943,11 @@ template = pn.template.FastListTemplate(
                 selected_cov,
                 drilldown_plot,
                 drilldown_analysis,
+
+                pn.pane.Markdown("## 💬 GenAI 판단지원 Agent PoC"),
+                agent_question,
+                agent_button,
+                agent_answer,
             )),
             dynamic=True   # 👈 여기 한 줄 추가
         )
